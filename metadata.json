@@ -1,0 +1,5 @@
+{
+  "name": "Scorelytics",
+  "description": "A comprehensive Aptitude Analysis System powered by MongoDB Atlas, featuring real-time testing, performance analytics, and an admin dashboard.",
+  "requestFramePermissions": []
+}

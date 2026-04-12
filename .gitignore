@@ -1,0 +1,30 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Local env files (keep examples only)
+java-backend/.env
+
+# Vite / TS
+.vite/
+*.tsbuildinfo
+
+# git-filter-repo temporary directory
+.git-rewrite/
+
+# Java / Maven
+java-backend/target/
+java-backend/.classpath
+java-backend/.project
+java-backend/.settings/
+
+# IDE
+.vscode/
+
+# OS
+Thumbs.db
