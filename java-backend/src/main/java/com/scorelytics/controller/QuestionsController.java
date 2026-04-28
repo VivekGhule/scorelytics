@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -23,8 +24,30 @@ public class QuestionsController {
      * Get all questions (public endpoint)
      */
     @GetMapping
-    public ResponseEntity<List<Question>> getAllQuestions() {
-        List<Question> questions = questionRepository.findAll();
+    public ResponseEntity<?> getAllQuestions(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String difficulty
+    ) {
+        Question.Category parsedCategory;
+        Question.Difficulty parsedDifficulty;
+
+        try {
+            parsedCategory = parseCategory(category);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid category"));
+        }
+
+        try {
+            parsedDifficulty = parseDifficulty(difficulty);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid difficulty"));
+        }
+
+        List<Question> questions = questionRepository.findAll().stream()
+                .map(this::normalizeQuestion)
+                .filter(question -> parsedCategory == null || question.getCategory() == parsedCategory)
+                .filter(question -> parsedDifficulty == null || question.getDifficulty() == parsedDifficulty)
+                .toList();
         return ResponseEntity.ok(questions);
     }
     
@@ -34,6 +57,7 @@ public class QuestionsController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getQuestionById(@PathVariable String id) {
         return questionRepository.findById(id)
+                .map(this::normalizeQuestion)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -57,6 +81,7 @@ public class QuestionsController {
         if (question.getCategory() == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "category is required"));
         }
+        normalizeQuestion(question);
         if (question.getCreatedAt() == null || question.getCreatedAt().isBlank()) {
             question.setCreatedAt(Instant.now().toString());
         }
@@ -82,10 +107,12 @@ public class QuestionsController {
         if (patch.getOptionImages() != null) existing.setOptionImages(patch.getOptionImages());
         if (patch.getCorrectAnswer() != null) existing.setCorrectAnswer(patch.getCorrectAnswer());
         if (patch.getCategory() != null) existing.setCategory(patch.getCategory());
+        if (patch.getDifficulty() != null) existing.setDifficulty(patch.getDifficulty());
         if (patch.getImageUrl() != null) existing.setImageUrl(patch.getImageUrl());
         if (patch.getExplanation() != null) existing.setExplanation(patch.getExplanation());
         if (patch.getInstructions() != null) existing.setInstructions(patch.getInstructions());
 
+        normalizeQuestion(existing);
         Question saved = questionRepository.save(existing);
         return ResponseEntity.ok(saved);
     }
@@ -101,6 +128,39 @@ public class QuestionsController {
         }
         questionRepository.deleteById(id);
         return ResponseEntity.ok().build();
+    }
+
+    private Question normalizeQuestion(Question question) {
+        if (question.getDifficulty() == null) {
+            question.setDifficulty(Question.Difficulty.Easy);
+        }
+        return question;
+    }
+
+    private Question.Category parseCategory(String rawCategory) {
+        if (!StringUtils.hasText(rawCategory) || "all".equalsIgnoreCase(rawCategory)) {
+            return null;
+        }
+
+        return switch (rawCategory.trim().toLowerCase()) {
+            case "quant" -> Question.Category.Quant;
+            case "reasoning" -> Question.Category.Reasoning;
+            case "verbal" -> Question.Category.Verbal;
+            default -> throw new IllegalArgumentException("Invalid category");
+        };
+    }
+
+    private Question.Difficulty parseDifficulty(String rawDifficulty) {
+        if (!StringUtils.hasText(rawDifficulty) || "all".equalsIgnoreCase(rawDifficulty)) {
+            return null;
+        }
+
+        return switch (rawDifficulty.trim().toLowerCase()) {
+            case "easy" -> Question.Difficulty.Easy;
+            case "medium" -> Question.Difficulty.Medium;
+            case "hard" -> Question.Difficulty.Hard;
+            default -> throw new IllegalArgumentException("Invalid difficulty");
+        };
     }
 }
 

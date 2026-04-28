@@ -1,231 +1,159 @@
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React from 'react';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { motion, AnimatePresence } from 'motion/react';
-import { GraduationCap, CheckCircle2, BarChart3, Clock, ArrowRight, Mail, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { motion } from 'motion/react';
+import { GraduationCap, CheckCircle2, BarChart3, Clock, ArrowRight, Target, Zap, Users, Star, BookOpen, Shield } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
-  const { profile, loading, login, register } = useAuth();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { profile, loading } = useAuth();
 
   if (!loading && profile) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
-    try {
-      if (mode === 'login') {
-        await login(email, password);
-      } else {
-        if (!name.trim()) { setError('Please enter your name.'); setIsSubmitting(false); return; }
-        await register(name.trim(), email, password);
-      }
-    } catch (err: any) {
-      const msg = err?.response?.data?.error || err?.message || 'Something went wrong. Please try again.';
-      setError(msg);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const features = [
+    { icon: CheckCircle2, title: 'Real-time Analysis', desc: 'Get instant feedback on every test with detailed performance metrics.', color: 'bg-green-100 dark:bg-green-900/20', iconColor: 'text-green-600 dark:text-green-400' },
+    { icon: BarChart3, title: 'Detailed Insights', desc: 'Subject-wise breakdown helps you understand your strengths and weaknesses.', color: 'bg-blue-100 dark:bg-blue-900/20', iconColor: 'text-blue-600 dark:text-blue-400' },
+    { icon: Clock, title: 'Timed Tests', desc: 'Practice under real exam conditions with precise time tracking.', color: 'bg-purple-100 dark:bg-purple-900/20', iconColor: 'text-purple-600 dark:text-purple-400' },
+    { icon: GraduationCap, title: 'Expert Content', desc: 'Questions curated by experts covering Quant, Reasoning & Verbal.', color: 'bg-orange-100 dark:bg-orange-900/20', iconColor: 'text-orange-600 dark:text-orange-400' },
+    { icon: Target, title: 'Weak Area Focus', desc: 'Identify weak topics and get targeted practice recommendations.', color: 'bg-red-100 dark:bg-red-900/20', iconColor: 'text-red-600 dark:text-red-400' },
+    { icon: Shield, title: 'Secure & Reliable', desc: 'Your progress is safely tracked with enterprise-grade security.', color: 'bg-teal-100 dark:bg-teal-900/20', iconColor: 'text-teal-600 dark:text-teal-400' },
+  ];
 
-  const switchMode = (newMode: 'login' | 'register') => {
-    setMode(newMode);
-    setError('');
-    setName('');
-    setEmail('');
-    setPassword('');
-  };
+  const stats = [
+    { value: '10K+', label: 'Active Students' },
+    { value: '500+', label: 'Practice Questions' },
+    { value: '50+', label: 'Test Series' },
+    { value: '98%', label: 'Satisfaction Rate' },
+  ];
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="grid lg:grid-cols-2 gap-12 items-center py-12">
-        {/* Left — Hero */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 dark:text-white leading-tight mb-6">
-            Master Your <span className="text-indigo-600 dark:text-indigo-400">Aptitude</span> Skills with Precision
-          </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-            Scorelytics provides advanced performance analytics, subject-wise breakdown, and personalized feedback to help you excel in competitive exams.
-          </p>
+      {/* Hero Section */}
+      <section className="py-16 md:py-24">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-full text-sm font-semibold text-indigo-600 dark:text-indigo-400 mb-6">
+              <Zap className="w-3.5 h-3.5" /> #1 Aptitude Prep Platform
+            </div>
+            <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 dark:text-white leading-tight mb-6">
+              Master Your{' '}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
+                Aptitude
+              </span>{' '}
+              Skills with Precision
+            </h1>
+            <p className="text-xl text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+              Scorelytics provides advanced performance analytics, subject-wise breakdown, and personalized feedback to help you excel in competitive exams.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                Get Started Free <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl font-bold text-lg hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md transition-all duration-300"
+              >
+                Sign In
+              </Link>
+            </div>
+          </motion.div>
 
-          <div className="mt-8 grid grid-cols-2 gap-6">
-            {[
-              { icon: CheckCircle2, label: 'Real-time Analysis', color: 'bg-green-100 dark:bg-green-900/20', iconColor: 'text-green-600 dark:text-green-400' },
-              { icon: BarChart3, label: 'Detailed Insights', color: 'bg-blue-100 dark:bg-blue-900/20', iconColor: 'text-blue-600 dark:text-blue-400' },
-              { icon: Clock, label: 'Timed Tests', color: 'bg-purple-100 dark:bg-purple-900/20', iconColor: 'text-purple-600 dark:text-purple-400' },
-              { icon: GraduationCap, label: 'Expert Content', color: 'bg-orange-100 dark:bg-orange-900/20', iconColor: 'text-orange-600 dark:text-orange-400' },
-            ].map(({ icon: Icon, label, color, iconColor }) => (
-              <div key={label} className="flex items-center gap-3">
-                <div className={`p-2 ${color} rounded-lg`}>
-                  <Icon className={`w-5 h-5 ${iconColor}`} />
+          {/* Right side — Decorative card */}
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="hidden lg:block">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-3xl blur-2xl opacity-20 dark:opacity-30 -rotate-3" />
+              <div className="relative bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-2xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center">
+                    <GraduationCap className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white">Scorelytics</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Performance Dashboard</div>
+                  </div>
                 </div>
-                <span className="font-medium text-slate-700 dark:text-slate-300">{label}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Right — Auth Card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-        >
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            {/* Tab switcher */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800">
-              {(['login', 'register'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => switchMode(tab)}
-                  className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-all ${
-                    mode === tab
-                      ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                  }`}
-                >
-                  {tab === 'login' ? 'Sign In' : 'Create Account'}
-                </button>
-              ))}
-            </div>
-
-            <div className="p-8">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={mode}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                    {mode === 'login' ? 'Welcome back!' : 'Join Scorelytics'}
-                  </h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-                    {mode === 'login'
-                      ? 'Sign in to continue your learning journey.'
-                      : 'Create a free account to get started.'}
-                  </p>
-
-                  {/* Error */}
-                  <AnimatePresence>
-                    {error && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="flex items-start gap-2 p-3 mb-5 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm"
-                      >
-                        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                        <span>{error}</span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Name (register only) */}
-                    {mode === 'register' && (
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Full Name</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                          <input
-                            type="text"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                            placeholder="John Doe"
-                            required
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                          />
+                <div className="space-y-3 mb-6">
+                  {['Quantitative Aptitude', 'Logical Reasoning', 'Verbal Ability'].map((subject, i) => (
+                    <div key={subject} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{subject}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${i === 0 ? 'bg-indigo-500 w-[85%]' : i === 1 ? 'bg-violet-500 w-[72%]' : 'bg-emerald-500 w-[90%]'}`} style={{ width: i === 0 ? '85%' : i === 1 ? '72%' : '90%' }} />
                         </div>
-                      </div>
-                    )}
-
-                    {/* Email */}
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email Address</label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={e => setEmail(e.target.value)}
-                          placeholder="you@example.com"
-                          required
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                        />
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{i === 0 ? '85%' : i === 1 ? '72%' : '90%'}</span>
                       </div>
                     </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                  <Star className="w-4 h-4 text-amber-500" />
+                  <span>Overall Score: <strong className="text-slate-900 dark:text-white">82%</strong></span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-                    {/* Password */}
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          value={password}
-                          onChange={e => setPassword(e.target.value)}
-                          placeholder={mode === 'register' ? 'Min. 6 characters' : '••••••••'}
-                          required
-                          minLength={6}
-                          className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
+      {/* Stats */}
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {stats.map(s => (
+            <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 text-center shadow-sm hover:shadow-md transition-all">
+              <div className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 mb-1">{s.value}</div>
+              <div className="text-sm font-medium text-slate-500 dark:text-slate-400">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </motion.section>
 
-                    {/* Submit */}
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full mt-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40 transition-all"
-                    >
-                      {isSubmitting ? (
-                        <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          {mode === 'login' ? 'Sign In' : 'Create Account'}
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  </form>
+      {/* Features */}
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="py-12">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-4">
+            Why Students Love <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">Scorelytics</span>
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto">Everything you need to prepare, practice, and perform at your best.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((f, i) => (
+            <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group">
+              <div className={`w-12 h-12 ${f.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                <f.icon className={`w-6 h-6 ${f.iconColor}`} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{f.title}</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">{f.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
 
-                  <p className="mt-5 text-center text-sm text-slate-500 dark:text-slate-400">
-                    {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
-                    <button
-                      onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
-                      className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
-                    >
-                      {mode === 'login' ? 'Create one' : 'Sign in'}
-                    </button>
-                  </p>
-                </motion.div>
-              </AnimatePresence>
+      {/* CTA */}
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="py-16">
+        <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-3xl p-8 md:p-14 text-center text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-56 h-56 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
+          </div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Users className="w-5 h-5 text-amber-300" />
+              <span className="text-sm font-bold uppercase tracking-wider text-white/80">Join 10,000+ students</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Ready to Start Your Journey?</h2>
+            <p className="text-white/80 text-lg max-w-xl mx-auto mb-8">Create your free account today and unlock your full potential with Scorelytics.</p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link to="/register" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-700 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:bg-slate-50 transition-all transform hover:-translate-y-0.5">
+                <BookOpen className="w-5 h-5" /> Create Free Account <ArrowRight className="w-5 h-5" />
+              </Link>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.section>
     </div>
   );
 };

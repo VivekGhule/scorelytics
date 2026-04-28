@@ -12,6 +12,15 @@ export const apiClient = axios.create({
 
 // Add JWT token to every request if present
 apiClient.interceptors.request.use((config) => {
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData && config.headers) {
+    const headers = config.headers as any;
+    if (typeof headers.setContentType === 'function') {
+      headers.setContentType(undefined);
+    } else {
+      delete headers['Content-Type'];
+    }
+  }
+
   const token = localStorage.getItem('scorelytics_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

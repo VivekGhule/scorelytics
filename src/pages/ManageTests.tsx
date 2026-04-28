@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { TestRepository, QuestionRepository } from '../services/testService';
-import { Test, Question, QuestionCategory } from '../types';
+import { Test, Question, QuestionCategory, QuestionDifficulty } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Trash2, Clock, BookOpen, X, Check, Search, FileText, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ type QuestionFormData = {
   options: string[];
   correctAnswer: string;
   category: QuestionCategory;
+  difficulty: QuestionDifficulty;
   imageUrl: string;
 };
 
@@ -27,6 +28,7 @@ const DEFAULT_QUESTION_FORM: QuestionFormData = {
   options: ['', '', '', ''],
   correctAnswer: '',
   category: 'Quant',
+  difficulty: 'Easy',
   imageUrl: ''
 };
 
@@ -109,6 +111,7 @@ const ManageTests: React.FC = () => {
       options: options.slice(0, 4),
       correctAnswer: question.correctAnswer || '',
       category: question.category,
+      difficulty: question.difficulty || 'Easy',
       imageUrl: question.imageUrl || ''
     });
     setIsQuestionModalOpen(true);
@@ -237,6 +240,7 @@ const ManageTests: React.FC = () => {
       options,
       correctAnswer,
       category: questionFormData.category,
+      difficulty: questionFormData.difficulty,
       imageUrl: imageUrl || undefined
     };
 
@@ -298,10 +302,24 @@ const ManageTests: React.FC = () => {
       questions.filter(
         q =>
           q.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          q.category.toLowerCase().includes(searchTerm.toLowerCase())
+          q.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (q.difficulty || 'Easy').toLowerCase().includes(searchTerm.toLowerCase())
       ),
     [questions, searchTerm]
   );
+
+  const getDifficultyBadgeClasses = (difficulty: QuestionDifficulty) => {
+    switch (difficulty) {
+      case 'Easy':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'Medium':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'Hard':
+        return 'bg-rose-50 text-rose-700 border-rose-200';
+      default:
+        return 'bg-slate-50 text-slate-600 border-slate-200';
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -514,6 +532,9 @@ const ManageTests: React.FC = () => {
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                       {q.category}
                                     </span>
+                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${getDifficultyBadgeClasses(q.difficulty || 'Easy')}`}>
+                                      {q.difficulty || 'Easy'}
+                                    </span>
                                   </div>
                                   <p className="text-sm text-slate-700 font-medium line-clamp-2">{q.text}</p>
                                 </div>
@@ -610,7 +631,7 @@ const ManageTests: React.FC = () => {
                     />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
                       <select
@@ -627,6 +648,24 @@ const ManageTests: React.FC = () => {
                         <option value="Quant">Quantitative</option>
                         <option value="Reasoning">Reasoning</option>
                         <option value="Verbal">Verbal</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Difficulty</label>
+                      <select
+                        value={questionFormData.difficulty}
+                        onChange={e =>
+                          setQuestionFormData({
+                            ...questionFormData,
+                            difficulty: e.target.value as QuestionDifficulty
+                          })
+                        }
+                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                        title="Difficulty"
+                      >
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
                       </select>
                     </div>
                     <div>

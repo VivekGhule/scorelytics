@@ -4,15 +4,9 @@ import com.scorelytics.entity.Question;
 import com.scorelytics.entity.Test;
 import com.scorelytics.entity.User;
 import com.scorelytics.repository.QuestionRepository;
-import com.scorelytics.repository.TestResultRepository;
 import com.scorelytics.repository.TestRepository;
 import com.scorelytics.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.bson.Document;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,100 +28,20 @@ public class AdminController {
     private final QuestionRepository questionRepository;
     private final TestRepository testRepository;
     private final UserRepository userRepository;
-    private final TestResultRepository testResultRepository;
-    private final MongoTemplate mongoTemplate;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @GetMapping("/stats")
     public Map<String, Object> getStats() {
-        long dbPingMs = -1;
-        boolean dbUp = false;
-        try {
-            long start = System.nanoTime();
-            mongoTemplate.executeCommand("{ ping: 1 }");
-            dbPingMs = (System.nanoTime() - start) / 1_000_000;
-            dbUp = true;
-        } catch (Exception ignored) {
-            dbUp = false;
-        }
-
         Date cutoff = new Date(System.currentTimeMillis() - (10 * 60 * 1000));
         long activeUsers = userRepository.countByLastSeenAtAfter(cutoff);
 
         Map<String, Object> stats = new HashMap<>();
-        stats.put("dbUp", dbUp);
-        stats.put("dbPingMs", dbPingMs);
         stats.put("questions", questionRepository.count());
         stats.put("tests", testRepository.count());
-        stats.put("results", testResultRepository.count());
         stats.put("users", userRepository.count());
         stats.put("activeUsers", activeUsers);
         stats.put("activeWindowMinutes", 10);
         return stats;
-    }
-
-    @GetMapping("/analytics")
-    public Map<String, Object> getAnalytics(@RequestParam(defaultValue = "7") int days) {
-        int clampedDays = Math.max(1, Math.min(days, 90));
-        Date cutoff = new Date(System.currentTimeMillis() - (clampedDays * 24L * 60L * 60L * 1000L));
-
-        // Submissions by day (count + avg accuracy + avg score)
-        Aggregation submissionsAgg = Aggregation.newAggregation(
-                Aggregation.project()
-                        .andExpression("dateFromString(timestamp)").as("ts")
-                        .and("accuracy").as("accuracy")
-                        .and("score").as("score"),
-                Aggregation.match(Criteria.where("ts").gte(cutoff)),
-                Aggregation.project()
-                        .andExpression("dateToString('%Y-%m-%d', ts)").as("day")
-                        .and("accuracy").as("accuracy")
-                        .and("score").as("score"),
-                Aggregation.group("day")
-                        .count().as("submissions")
-                        .avg("accuracy").as("avgAccuracy")
-                        .avg("score").as("avgScore"),
-                Aggregation.project("submissions", "avgAccuracy", "avgScore").and("_id").as("day"),
-                Aggregation.sort(org.springframework.data.domain.Sort.Direction.ASC, "day")
-        );
-
-        AggregationResults<Document> submissionsRes =
-                mongoTemplate.aggregate(submissionsAgg, "test_results", Document.class);
-
-        // Top weak areas
-        Aggregation weakAreasAgg = Aggregation.newAggregation(
-                Aggregation.project()
-                        .andExpression("dateFromString(timestamp)").as("ts")
-                        .and("weakAreas").as("weakAreas"),
-                Aggregation.match(Criteria.where("ts").gte(cutoff)),
-                Aggregation.unwind("weakAreas"),
-                Aggregation.group("weakAreas").count().as("count"),
-                Aggregation.project("count").and("_id").as("weakArea"),
-                Aggregation.sort(org.springframework.data.domain.Sort.Direction.DESC, "count"),
-                Aggregation.limit(10)
-        );
-        AggregationResults<Document> weakAreasRes =
-                mongoTemplate.aggregate(weakAreasAgg, "test_results", Document.class);
-
-        // Top tests by submissions
-        Aggregation topTestsAgg = Aggregation.newAggregation(
-                Aggregation.project()
-                        .andExpression("dateFromString(timestamp)").as("ts")
-                        .and("testTitle").as("testTitle"),
-                Aggregation.match(Criteria.where("ts").gte(cutoff)),
-                Aggregation.group("testTitle").count().as("submissions"),
-                Aggregation.project("submissions").and("_id").as("testTitle"),
-                Aggregation.sort(org.springframework.data.domain.Sort.Direction.DESC, "submissions"),
-                Aggregation.limit(10)
-        );
-        AggregationResults<Document> topTestsRes =
-                mongoTemplate.aggregate(topTestsAgg, "test_results", Document.class);
-
-        Map<String, Object> out = new HashMap<>();
-        out.put("days", clampedDays);
-        out.put("submissionsByDay", submissionsRes.getMappedResults());
-        out.put("topWeakAreas", weakAreasRes.getMappedResults());
-        out.put("topTests", topTestsRes.getMappedResults());
-        return out;
     }
 
     // User Management
@@ -233,6 +147,7 @@ public class AdminController {
 
     @PostMapping("/questions")
     public Question addQuestion(@RequestBody Question question) {
+        question = normalizeQuestion(question);
         return Objects.requireNonNull(questionRepository.save(question));
     }
 
@@ -260,5 +175,12 @@ public class AdminController {
     public ResponseEntity<?> deleteTest(@PathVariable String id) {
         testRepository.deleteById(Objects.requireNonNull(id));
         return ResponseEntity.ok().build();
+    }
+
+    private Question normalizeQuestion(Question question) {
+        if (question.getDifficulty() == null) {
+            question.setDifficulty(Question.Difficulty.Easy);
+        }
+        return question;
     }
 }

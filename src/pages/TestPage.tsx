@@ -10,7 +10,7 @@ import { getProfileAvatarUrl } from '../utils/avatar';
 
 const TestPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
-  const { profile } = useAuth();
+  const { profile, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [test, setTest] = useState<Test | null>(null);
@@ -22,7 +22,7 @@ const TestPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = useCallback(async () => {
-    if (!test || !profile || submitting) return;
+    if (!test || !profile || isAdmin || submitting) return;
     setSubmitting(true);
     try {
       await TestService.calculateResult(
@@ -41,6 +41,12 @@ const TestPage: React.FC = () => {
   }, [test, profile, answers, questions, navigate, submitting]);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (isAdmin) {
+      navigate('/admin');
+      return;
+    }
+
     const fetchData = async () => {
       if (!testId) return;
       try {
@@ -61,7 +67,7 @@ const TestPage: React.FC = () => {
       }
     };
     fetchData();
-  }, [testId, navigate]);
+  }, [authLoading, isAdmin, testId, navigate]);
 
   useEffect(() => {
     if (timeLeft <= 0 && !loading && test) {
@@ -82,7 +88,7 @@ const TestPage: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (loading) return <div className="flex justify-center py-20">Loading test...</div>;
+  if (authLoading || loading) return <div className="flex justify-center py-20">Loading test...</div>;
   if (!test || questions.length === 0) return <div className="text-center py-20">No questions found for this test.</div>;
 
   const currentQuestion = questions[currentIdx];

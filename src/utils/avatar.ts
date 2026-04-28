@@ -1,7 +1,7 @@
 import { UserProfile } from '../types';
 
-const MALE_AVATAR_STYLE = 'adventurer';
-const FEMALE_AVATAR_STYLE = 'avataaars';
+const MALE_AVATAR_STYLE = 'thumbs';
+const FEMALE_AVATAR_STYLE = 'bottts-neutral';
 
 export type AvatarUser = Pick<UserProfile, 'name' | 'email' | 'gender'>;
 

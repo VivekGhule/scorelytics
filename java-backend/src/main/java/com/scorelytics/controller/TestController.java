@@ -40,6 +40,7 @@ public class TestController {
 
         TestResult result = testService.evaluateTest(
                 user, 
+                request.getTestId(),
                 request.getTestTitle(), 
                 questions, 
                 request.getAnswers()

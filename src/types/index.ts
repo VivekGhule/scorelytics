@@ -10,6 +10,7 @@ export interface UserProfile {
   gender?: GenderPreference;
   createdAt: string;
   phone?: string;
+  dateOfBirth?: string;
   location?: string;
   education?: {
     degree?: string;
@@ -20,6 +21,20 @@ export interface UserProfile {
 }
 
 export type QuestionCategory = 'Quant' | 'Reasoning' | 'Verbal';
+export type QuestionDifficulty = 'Easy' | 'Medium' | 'Hard';
+export type DifficultyBucketKey = 'easy' | 'medium' | 'hard';
+export type StudyResourceType = 'NOTE' | 'PDF';
+
+export interface DifficultyBucket {
+  correct: number;
+  total: number;
+}
+
+export interface DifficultyStats {
+  easy: DifficultyBucket;
+  medium: DifficultyBucket;
+  hard: DifficultyBucket;
+}
 
 export interface Question {
   id?: string;
@@ -28,6 +43,7 @@ export interface Question {
   optionImages?: string[]; // Optional image URLs for each option
   correctAnswer: string;
   category: QuestionCategory;
+  difficulty: QuestionDifficulty;
   imageUrl?: string;
   createdAt: string;
 }
@@ -49,9 +65,24 @@ export interface TestResult {
   score: number;
   totalQuestions: number;
   subjectWise: Record<QuestionCategory, number>;
+  subjectTotals?: Record<QuestionCategory, number>;
   weakAreas: string[];
   accuracy: number;
+  difficultyStats?: DifficultyStats;
   userName: string;
   userPhoto?: string;
   timestamp: string;
+}
+
+export interface StudyResource {
+  id?: string;
+  title: string;
+  description?: string;
+  category: QuestionCategory;
+  type: StudyResourceType;
+  noteContent?: string;
+  fileId?: string;
+  fileName?: string;
+  createdAt: string;
+  updatedAt?: string;
 }

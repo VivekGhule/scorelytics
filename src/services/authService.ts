@@ -11,8 +11,8 @@ export const AuthService = {
     return profile as UserProfile;
   },
 
-  async register(name: string, email: string, password: string): Promise<UserProfile> {
-    const response = await apiClient.post('/auth/register', { name, email, password });
+  async register(name: string, email: string, password: string, extras?: { phone?: string; dateOfBirth?: string; education?: { degree?: string; college?: string } }): Promise<UserProfile> {
+    const response = await apiClient.post('/auth/register', { name, email, password, ...extras });
     const { token, profile } = response.data;
     localStorage.setItem(TOKEN_KEY, token);
     return profile as UserProfile;

@@ -1,12 +1,16 @@
-import { AuthService } from './authService';
 import apiClient from './apiClient';
-import { Question, Test, TestResult, QuestionCategory } from '../types';
+import { Question, Test, TestResult, QuestionCategory, QuestionDifficulty, DifficultyBucketKey, DifficultyStats } from '../types';
 
 // Repository Layer (API Access)
 export const QuestionRepository = {
-  async getAll() {
+  async getAll(filters?: { category?: QuestionCategory; difficulty?: QuestionDifficulty }) {
     try {
-      const response = await apiClient.get('/questions');
+      const response = await apiClient.get('/questions', {
+        params: {
+          category: filters?.category,
+          difficulty: filters?.difficulty,
+        },
+      });
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('API Error (LIST questions):', error);
@@ -130,6 +134,11 @@ export const TestService = {
     questions: Question[]
   ) {
     let score = 0;
+    const difficultyKeyMap: Record<QuestionDifficulty, DifficultyBucketKey> = {
+      Easy: 'easy',
+      Medium: 'medium',
+      Hard: 'hard',
+    };
     const subjectWise: Record<QuestionCategory, number> = {
       Quant: 0,
       Reasoning: 0,
@@ -140,12 +149,22 @@ export const TestService = {
       Reasoning: 0,
       Verbal: 0
     };
+    const difficultyStats: DifficultyStats = {
+      easy: { correct: 0, total: 0 },
+      medium: { correct: 0, total: 0 },
+      hard: { correct: 0, total: 0 },
+    };
 
     questions.forEach(q => {
+      const difficulty = q.difficulty || 'Easy';
+      const difficultyKey = difficultyKeyMap[difficulty];
       totalBySubject[q.category]++;
+      difficultyStats[difficultyKey].total++;
+
       if (answers[q.id!] === q.correctAnswer) {
         score++;
         subjectWise[q.category]++;
+        difficultyStats[difficultyKey].correct++;
       }
     });
 
@@ -164,8 +183,10 @@ export const TestService = {
       score,
       totalQuestions: questions.length,
       subjectWise,
+      subjectTotals: totalBySubject,
       weakAreas,
       accuracy: (score / questions.length) * 100,
+      difficultyStats,
       userName,
       userPhoto,
       timestamp: new Date().toISOString()

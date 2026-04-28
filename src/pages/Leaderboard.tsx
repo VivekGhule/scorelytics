@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ResultRepository, UserRepository } from '../services/testService';
-import { TestResult, UserProfile } from '../types';
+import { ResultRepository } from '../services/testService';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
-import { Trophy, Medal, Target, Award, User as UserIcon, TrendingUp } from 'lucide-react';
+import { Trophy, Medal, Award, User as UserIcon } from 'lucide-react';
 
 interface LeaderboardEntry {
   userId: string;
@@ -16,7 +15,7 @@ interface LeaderboardEntry {
 }
 
 const Leaderboard: React.FC = () => {
-  const { user: currentUser } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState<LeaderboardEntry | null>(null);
@@ -65,8 +64,8 @@ const Leaderboard: React.FC = () => {
 
         setEntries(leaderboard);
         
-        if (currentUser) {
-          const current = leaderboard.find(e => e.userId === currentUser.uid);
+        if (!isAdmin && profile) {
+          const current = leaderboard.find(e => e.userId === profile.uid);
           if (current) setUserRank(current);
         }
       } catch (error) {
@@ -77,7 +76,7 @@ const Leaderboard: React.FC = () => {
     };
 
     fetchLeaderboard();
-  }, [currentUser]);
+  }, [profile, isAdmin]);
 
   if (loading) return <div className="flex justify-center py-20">Loading leaderboard...</div>;
 
@@ -93,7 +92,7 @@ const Leaderboard: React.FC = () => {
         </p>
       </header>
 
-      {userRank && (
+      {!isAdmin && userRank && (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -140,7 +139,7 @@ const Leaderboard: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${entry.userId === currentUser?.uid ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}
+                  className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${entry.userId === profile?.uid ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -163,7 +162,7 @@ const Leaderboard: React.FC = () => {
                       )}
                       <div>
                         <div className="font-bold text-slate-900 dark:text-white">{entry.name}</div>
-                        {entry.userId === currentUser?.uid && (
+                        {entry.userId === profile?.uid && (
                           <span className="text-[10px] bg-indigo-600 text-white px-1.5 py-0.5 rounded font-bold uppercase">You</span>
                         )}
                       </div>

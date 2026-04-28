@@ -74,6 +74,7 @@ async function startServer() {
     role: { type: String, default: 'USER' },
     photoUrl: { type: String },
     phone: String,
+    dateOfBirth: String,
     location: String,
     education: {
       college: String,
@@ -128,7 +129,7 @@ async function startServer() {
 
   // Register
   app.post('/api/auth/register', async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, dateOfBirth, education } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required.' });
     }
@@ -144,13 +145,13 @@ async function startServer() {
       const uid = Math.random().toString(36).substr(2, 12) + Date.now().toString(36);
       const role = email === 'vivekghule777@gmail.com' ? 'ADMIN' : 'USER';
 
-      const user = new User({ uid, name, email, passwordHash, role });
+      const user = new User({ uid, name, email, passwordHash, role, phone, dateOfBirth, education });
       await user.save();
 
       const token = jwt.sign({ uid, email, role }, JWT_SECRET, { expiresIn: '7d' });
       res.json({
         token,
-        profile: { uid, name, email, role, createdAt: new Date().toISOString() }
+        profile: { uid, name, email, role, phone, dateOfBirth, education, createdAt: new Date().toISOString() }
       });
     } catch (error) {
       console.error('Register error:', error);

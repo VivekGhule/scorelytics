@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/questions/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/tests/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/results/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/resources/**").hasAnyRole("USER", "ADMIN")
 
                 // Admin CRUD for question/test management
                 .requestMatchers(HttpMethod.POST, "/api/questions/**").hasRole("ADMIN")
@@ -55,8 +56,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/tests/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/tests/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/tests/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/resources/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/resources/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/resources/**").hasRole("ADMIN")
 
-                // Authenticated users can submit results; reads are public
+                // Authenticated users can reach result submission; controller blocks admins and reads are public
                 .requestMatchers(HttpMethod.POST, "/api/results/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/api/results/**").permitAll()
                 .requestMatchers("/health", "/actuator/**").permitAll()

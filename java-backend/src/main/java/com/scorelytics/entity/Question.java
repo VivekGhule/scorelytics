@@ -25,6 +25,9 @@ public class Question {
 
     private Category category;
 
+    @Builder.Default
+    private Difficulty difficulty = Difficulty.Easy;
+
     private String imageUrl;
 
     private String createdAt;
@@ -35,5 +38,9 @@ public class Question {
 
     public enum Category {
         Quant, Reasoning, Verbal
+    }
+
+    public enum Difficulty {
+        Easy, Medium, Hard
     }
 }

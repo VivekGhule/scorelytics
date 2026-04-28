@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { TestRepository, ResultRepository, UserRepository, QuestionRepository } from '../services/testService';
-import { Test, TestResult } from '../types';
+import { TestRepository, ResultRepository, QuestionRepository } from '../services/testService';
+import { Test } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
 import { Clock, BookOpen, PlayCircle, Trophy, Target, Star } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState<number | null>(null);
@@ -21,9 +21,10 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const resultsPromise = isAdmin ? Promise.resolve([]) : ResultRepository.getAll();
         const [testData, allResults, allQuestions] = await Promise.all([
           TestRepository.getAll(),
-          ResultRepository.getAll(),
+          resultsPromise,
           QuestionRepository.getAll()
         ]);
         setTests(testData);
@@ -38,17 +39,22 @@ const Dashboard: React.FC = () => {
         setQuestionCounts(counts);
 
         // Calculate rank
-        const userStats: Record<string, number> = {};
-        allResults.forEach(res => {
-          userStats[res.userId] = (userStats[res.userId] || 0) + res.score;
-        });
+        if (!isAdmin) {
+          const userStats: Record<string, number> = {};
+          allResults.forEach(res => {
+            userStats[res.userId] = (userStats[res.userId] || 0) + res.score;
+          });
 
-        const sortedUsers = Object.entries(userStats)
-          .sort(([, a], [, b]) => b - a);
-        
-        const rank = sortedUsers.findIndex(([uid]) => uid === profile?.uid) + 1;
-        if (rank > 0) setUserRank(rank);
-        if (profile) setTotalScore(userStats[profile.uid] || 0);
+          const sortedUsers = Object.entries(userStats)
+            .sort(([, a], [, b]) => b - a);
+
+          const rank = sortedUsers.findIndex(([uid]) => uid === profile?.uid) + 1;
+          if (rank > 0) setUserRank(rank);
+          if (profile) setTotalScore(userStats[profile.uid] || 0);
+        } else {
+          setUserRank(null);
+          setTotalScore(0);
+        }
 
       } catch (error) {
         console.error('Failed to fetch dashboard data', error);
@@ -57,7 +63,7 @@ const Dashboard: React.FC = () => {
       }
     };
     fetchData();
-  }, [profile]);
+  }, [profile, isAdmin]);
 
   if (loading) {
     return (
@@ -75,7 +81,7 @@ const Dashboard: React.FC = () => {
           <p className="text-slate-600 dark:text-slate-400">Choose a test to evaluate your skills and get detailed analysis.</p>
         </div>
         
-        {userRank && (
+        {!isAdmin && userRank && (
           <Link 
             to="/leaderboard"
             className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4 hover:shadow-md transition-all group"
@@ -166,13 +172,15 @@ const Dashboard: React.FC = () => {
                   : `${test.category} specialized test with ${test.questionIds.length} targeted questions.`}
               </p>
 
-              <Link 
-                to={`/test/${test.id}`}
-                className="w-full py-3 bg-slate-900 dark:bg-indigo-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-600 dark:hover:bg-indigo-700 transition-colors"
-              >
-                <PlayCircle className="w-5 h-5" />
-                Start Test
-              </Link>
+              {!isAdmin && (
+                <Link 
+                  to={`/test/${test.id}`}
+                  className="w-full py-3 bg-slate-900 dark:bg-indigo-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-600 dark:hover:bg-indigo-700 transition-colors"
+                >
+                  <PlayCircle className="w-5 h-5" />
+                  Start Test
+                </Link>
+              )}
             </motion.div>
           ))}
         </div>

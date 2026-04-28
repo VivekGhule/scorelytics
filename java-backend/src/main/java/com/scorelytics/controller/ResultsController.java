@@ -2,6 +2,7 @@ package com.scorelytics.controller;
 
 import com.scorelytics.entity.TestResult;
 import com.scorelytics.repository.TestResultRepository;
+import com.scorelytics.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/results")
@@ -19,13 +22,21 @@ import java.util.Map;
 public class ResultsController {
     
     private final TestResultRepository resultRepository;
+    private final UserRepository userRepository;
     
     /**
      * Get all results (public endpoint)
      */
     @GetMapping
     public ResponseEntity<List<TestResult>> getAllResults() {
-        List<TestResult> results = resultRepository.findAll();
+        Set<String> adminUserIds = userRepository.findAll().stream()
+                .filter(user -> user.getRole() == com.scorelytics.entity.User.Role.ADMIN)
+                .map(com.scorelytics.entity.User::getId)
+                .collect(Collectors.toSet());
+
+        List<TestResult> results = resultRepository.findAll().stream()
+                .filter(result -> !adminUserIds.contains(result.getUserId()))
+                .toList();
         return ResponseEntity.ok(results);
     }
     
@@ -49,7 +60,7 @@ public class ResultsController {
     }
 
     /**
-     * Save a test result (authenticated user/admin).
+     * Save a test result for a regular user.
      * Frontend posts the computed result after finishing a test.
      */
     @PostMapping
@@ -62,12 +73,12 @@ public class ResultsController {
         String authUserId = authentication.getPrincipal().toString();
         boolean isAdmin = authentication.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
 
-        // Users can only write their own results (admins can write any).
-        if (!isAdmin) {
-            result.setUserId(authUserId);
-        } else if (result.getUserId() == null || result.getUserId().isBlank()) {
-            result.setUserId(authUserId);
+        if (isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Admins cannot submit test results"));
         }
+
+        result.setUserId(authUserId);
 
         if (result.getTestTitle() == null || result.getTestTitle().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "testTitle is required"));

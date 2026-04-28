@@ -24,11 +24,32 @@ public class TestResult {
     private Double accuracy;
 
     private Map<String, Integer> subjectWise;
+    private Map<String, Integer> subjectTotals;
     private List<String> weakAreas;
+    private DifficultyStats difficultyStats;
 
     private String userName;
     private String userPhoto;
 
     // ISO string
     private String timestamp;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DifficultyBucket {
+        private Integer correct;
+        private Integer total;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DifficultyStats {
+        private DifficultyBucket easy;
+        private DifficultyBucket medium;
+        private DifficultyBucket hard;
+    }
 }
